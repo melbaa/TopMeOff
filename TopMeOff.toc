@@ -1,7 +1,7 @@
 ## Interface: 11200
 ## Title: TopMeOff
 ## Notes: Automatically tops off reagent stacks when you talk to a reagent vendor.
-## Author: Melba
+## Author: melba
 ## Version: 2
 ## Dependencies:
 ## SavedVariablesPerCharacter: reagentsWanted

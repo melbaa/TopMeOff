@@ -1,4 +1,73 @@
+local function info(msg)
+    local colored = "|cffffff00<TopMeOff> " .. msg .. "|r"
+    DEFAULT_CHAT_FRAME:AddMessage(colored);
+end
+
 reagentsWanted = reagentsWanted or {}
+
+local gfind = string.gmatch or string.gfind
+
+do
+    SLASH_TOPMEOFF1 = '/tmo'
+    SlashCmdList["TOPMEOFF"] = function(message)
+        local commandlist = { }
+        local command
+
+        local commandlist = { }
+        local command
+
+        for command in gfind(message, "[^ ]+") do
+            -- table.insert(commandlist, string.lower(command))
+            table.insert(commandlist, command)
+        end
+
+        commandlist[1] = string.lower(commandlist[1])
+
+        if commandlist[1] == 'add' then
+
+            local addstring = table.concat(commandlist, " ", 2, table.getn(commandlist))
+
+            -- info(addstring)
+            -- local _, _, itemLink = string.find(addstring, "(item:%d+:%d+:%d+:%d+)")
+            -- addstring = "|cffffffff|Hitem:13356:0:0:0|h[Somatic Intensifier]|h|r"
+            local _, _, itemLink = string.find(addstring, "(|c%x+|Hitem:%d+:%d+:%d+:%d+|h%[.-%]|h|r)")
+            if not itemLink then
+                info('an item link is required. use shift-click')
+                return
+            end
+
+            local amount = tonumber(commandlist[table.getn(commandlist)])
+            if amount == nil then
+                info('the amount should be a number')
+                return
+            end
+            reagentsWanted[itemLink] = amount
+            info('added ' .. itemLink .. ' ' .. amount)
+        elseif commandlist[1] == 'reset' then
+            reagentsWanted = {}
+            info('removed all items')
+        elseif commandlist[1] == 'ls' then
+            local count = 0
+            local reagentsOwned = CountReagents(reagentsWanted)
+            for k, v in pairs(reagentsWanted) do
+                info(k .. ' ' .. v .. ' have ' .. reagentsOwned[k])
+                count = count + 1
+            end
+            if not count then
+                info('nothing added yet')
+                return
+            end
+        else
+            info('usage: ')
+            info('tmo add <itemlink> <amount> - shift-click an item to get a link')
+            info('tmo ls - see all configured items')
+            info('tmo reset - delete all items from the list')
+        end
+    end
+end
+
+
+
 
 function TopMeOff_OnLoad()
     this:RegisterEvent("MERCHANT_SHOW");
@@ -10,11 +79,6 @@ function TopMeOff_OnEvent()
     end
 end
 
-local function info(msg)
-    local colored = "|cffffff00<TopMeOff> " .. msg .. "|r"
-    DEFAULT_CHAT_FRAME:AddMessage(colored);
-end
-
 function CountReagents(reagentsWanted)
 
     local reagentsOwned = {};
@@ -24,20 +88,20 @@ function CountReagents(reagentsWanted)
 
     for bagID = 0, 4 do
         for slot = 1, GetContainerNumSlots(bagID) do
-            local itemName, itemCount = GetBagItemNameAndCount(bagID, slot);
+            local itemLink, itemCount = GetBagItemAndCount(bagID, slot);
 
-            if itemName ~= nil then
-                local debug = 'found ' .. itemName .. ' ' .. itemCount
-                info(debug)
-                if reagentsOwned[itemName] ~= nil then
+            if itemLink then
+                local debug = 'found ' .. itemLink .. ' ' .. itemCount
+                -- info(debug)
+                if reagentsOwned[itemLink] ~= nil then
                     -- count this item
-                    reagentsOwned[itemName] = reagentsOwned[itemName] + itemCount
+                    reagentsOwned[itemLink] = reagentsOwned[itemLink] + itemCount
                 end
             end
         end
     end
     for k, v in pairs(reagentsOwned) do
-        info(k .. ' have ' .. v)
+        -- info(k .. ' have ' .. v)
     end
     return reagentsOwned
 end
@@ -49,19 +113,20 @@ function BuyReagents()
 
 
     for merchantIndex = 1, GetMerchantNumItems() do
-        local name, texture, price, quantity = GetMerchantItemInfo(merchantIndex)
-        -- info(name)
+        local itemLink = GetMerchantItemLink(merchantIndex)
 
-        if reagentsOwned[name] ~= nil and reagentsOwned[name] < reagentsWanted[name] then
+        if reagentsWanted[itemLink]
+        and reagentsOwned[itemLink] < reagentsWanted[itemLink] then
+            -- local name, texture, price, quantity = GetMerchantItemInfo(merchantIndex)
             -- we care about this item, how many should we buy
-            local neededCount = reagentsWanted[name] - reagentsOwned[name]
-            info(name .. ' buying ' .. neededCount)
-            -- BuyMerchantItem(merchantIndex, neededCount)
+            local neededCount = reagentsWanted[itemLink] - reagentsOwned[itemLink]
+            info(itemLink .. ' buying ' .. neededCount)
+            BuyMerchantItem(merchantIndex, neededCount)
         end
     end 
 end
 
-function GetBagItemNameAndCount(bag, slot)
+function GetBagItemAndCount(bag, slot)
 
     local texture, itemCount = GetContainerItemInfo(bag, slot);
 
@@ -71,11 +136,5 @@ function GetBagItemNameAndCount(bag, slot)
 
     local itemLink = GetContainerItemLink(bag, slot)
 
-    local itemName = nil
-    if itemLink then
-        -- info(itemLink)
-        itemName = GetItemInfo(itemLink)
-    end
-
-    return itemName, itemCount
+    return itemLink, itemCount
 end

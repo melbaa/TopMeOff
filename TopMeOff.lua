@@ -3,6 +3,13 @@ local function info(msg)
     DEFAULT_CHAT_FRAME:AddMessage(colored);
 end
 
+local function print_usage()
+    info('usage: ')
+    info('tmo add <itemlink> <amount> - shift-click an item to get a link')
+    info('tmo ls - see all configured items')
+    info('tmo reset - delete all items from the list')
+end
+
 reagentsWanted = reagentsWanted or {}
 
 local gfind = string.gmatch or string.gfind
@@ -17,8 +24,12 @@ do
         local command
 
         for command in gfind(message, "[^ ]+") do
-            -- table.insert(commandlist, string.lower(command))
             table.insert(commandlist, command)
+        end
+
+        if commandlist[1] == nil then
+            print_usage()
+            return
         end
 
         commandlist[1] = string.lower(commandlist[1])
@@ -58,10 +69,7 @@ do
                 return
             end
         else
-            info('usage: ')
-            info('tmo add <itemlink> <amount> - shift-click an item to get a link')
-            info('tmo ls - see all configured items')
-            info('tmo reset - delete all items from the list')
+            print_usage()
         end
     end
 end

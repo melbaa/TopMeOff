@@ -80,7 +80,7 @@ end
 function TopMeOff_OnLoad()
     this:RegisterEvent("MERCHANT_SHOW");
 end
-
+
 function TopMeOff_OnEvent()
     if( event == "MERCHANT_SHOW" ) then
         BuyReagents();

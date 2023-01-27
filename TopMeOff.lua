@@ -74,16 +74,23 @@ do
     end
 end
 
-
-
-
 function TopMeOff_OnLoad()
     this:RegisterEvent("MERCHANT_SHOW");
 end
-
+
 function TopMeOff_OnEvent()
     if( event == "MERCHANT_SHOW" ) then
         BuyReagents();
+    end
+end
+
+function tmo_round(input, places)
+    if not places then places = 0 end
+    if type(input) == "number" and type(places) == "number" then
+        local pow = 1
+        for i = 1, places do pow = pow * 10 end
+        local result = math.floor(input * pow + 0.5) / pow
+        return result == math.floor(result) and math.floor(result) or result
     end
 end
 
@@ -125,13 +132,17 @@ function BuyReagents()
 
         if reagentsWanted[itemLink]
         and reagentsOwned[itemLink] < reagentsWanted[itemLink] then
-            -- local name, texture, price, quantity = GetMerchantItemInfo(merchantIndex)
             -- we care about this item, how many should we buy
+            local name, texture, price, batchSize, numAvailable, isUsable, extendedCost = GetMerchantItemInfo(merchantIndex)
             local neededCount = reagentsWanted[itemLink] - reagentsOwned[itemLink]
-            info(itemLink .. ' buying ' .. neededCount)
-            BuyMerchantItem(merchantIndex, neededCount)
+            neededCount = tmo_round(neededCount / batchSize)  -- some things sell in batches of 5
+            if neededCount then
+                -- 0 buys a stack, so we prevent it
+                info(itemLink .. ' buying ' .. neededCount * batchSize)
+                BuyMerchantItem(merchantIndex, neededCount)
+            end
         end
-    end 
+    end
 end
 
 function GetBagItemAndCount(bag, slot)

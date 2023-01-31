@@ -61,7 +61,11 @@ do
             local count = 0
             local reagentsOwned = CountReagents(reagentsWanted)
             for k, v in pairs(reagentsWanted) do
-                info(k .. ' ' .. v .. ' have ' .. reagentsOwned[k])
+                local color = '|cff1eff00' -- green
+                if reagentsOwned[k] < v then
+                    color = '|cffff5179' -- red
+                end
+                info(k .. ' ' .. v .. ' have ' .. color .. reagentsOwned[k])
                 count = count + 1
             end
             if not count then

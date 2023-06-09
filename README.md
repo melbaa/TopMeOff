@@ -12,6 +12,8 @@ This addon works by checking your bags for stacks of consumables that are not to
 /tmo reset - reset the buy list
 ```
 
+![screenshot](ss.png?raw=true "screenshot")
+
 ## Credits
 
 rework: melba\

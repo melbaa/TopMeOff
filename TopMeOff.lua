@@ -20,9 +20,6 @@ do
         local commandlist = { }
         local command
 
-        local commandlist = { }
-        local command
-
         for command in gfind(message, "[^ ]+") do
             table.insert(commandlist, command)
         end
@@ -88,15 +85,6 @@ function TopMeOff_OnEvent()
     end
 end
 
-function tmo_round(input, places)
-    if not places then places = 0 end
-    if type(input) == "number" and type(places) == "number" then
-        local pow = 1
-        for i = 1, places do pow = pow * 10 end
-        local result = math.floor(input * pow + 0.5) / pow
-        return result == math.floor(result) and math.floor(result) or result
-    end
-end
 
 function CountReagents(reagentsWanted)
 
@@ -139,7 +127,7 @@ function BuyReagents()
             -- we care about this item, how many should we buy
             local name, texture, price, batchSize, numAvailable, isUsable, extendedCost = GetMerchantItemInfo(merchantIndex)
             local neededCount = reagentsWanted[itemLink] - reagentsOwned[itemLink]
-            neededCount = tmo_round(neededCount / batchSize)  -- some things sell in batches of 5
+            neededCount = math.ceil(neededCount / batchSize)  -- some things sell in batches of 5
             if neededCount then
                 -- 0 buys a stack, so we prevent it
                 info(itemLink .. ' buying ' .. neededCount * batchSize)

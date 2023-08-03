@@ -12,6 +12,8 @@ This addon works by checking your bags for stacks of consumables that are not to
 /tmo reset - reset the buy list
 ```
 
+Note: if you add a spirit zanza, the quest will auto-complete until you have enough.
+
 ![screenshot](ss.png?raw=true "screenshot")
 
 ## Credits

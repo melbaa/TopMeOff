@@ -86,18 +86,6 @@ local function buy_spirit_zanza()
     end
     if not quest_found then return end
 
-    -- do we have less than needed?
-    local reagentsOwned = CountReagents(reagentsWanted)
-    if reagentsOwned[quest_found] >= reagentsWanted[quest_found] then return end
-
-    -- do we have a honor token?
-    local honor_token_itemlink = "|cff1eff00|Hitem:19858:0:0:0|h[Zandalar Honor Token]|h|r"
-    local honorTokensOwned = CountReagents({[honor_token_itemlink]=1})
-    if honorTokensOwned[honor_token_itemlink] < 1 then
-        info('missing ' .. honor_token_itemlink .. ' for ' .. quest_found)
-        return
-    end
-
     -- is the quest available at the npc?
     local qidx = -1
     local active_qs = {GetGossipActiveQuests()}
@@ -111,6 +99,19 @@ local function buy_spirit_zanza()
     end
     if qidx == -1 then return end
 
+    -- do we have less than needed?
+    local reagentsOwned = CountReagents(reagentsWanted)
+    if reagentsOwned[quest_found] >= reagentsWanted[quest_found] then return end
+
+    -- do we have a honor token?
+    local honor_token_itemlink = "|cff1eff00|Hitem:19858:0:0:0|h[Zandalar Honor Token]|h|r"
+    local honorTokensOwned = CountReagents({[honor_token_itemlink]=1})
+    if honorTokensOwned[honor_token_itemlink] < 1 then
+        info('missing ' .. honor_token_itemlink .. ' for ' .. quest_found)
+        return
+    end
+
+    -- ready to activate the quest
     SelectGossipActiveQuest(qidx)
 end
 

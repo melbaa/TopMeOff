@@ -5,8 +5,9 @@ end
 
 local function print_usage()
     info('usage: ')
-    info('tmo add <itemlink> <amount> - shift-click an item to get a link')
+    info('tmo add <itemlink> <amount> - shift-click an item for an item link')
     info('tmo ls - see all configured items')
+    info('tmo del <itemlink> - remove 1 item from the list. shift-click an item for an item link.')
     info('tmo reset - delete all items from the list')
 end
 
@@ -33,12 +34,12 @@ do
 
         if commandlist[1] == 'add' then
 
-            local addstring = table.concat(commandlist, " ", 2, table.getn(commandlist))
+            local cmdstring = table.concat(commandlist, " ", 2, table.getn(commandlist))
 
-            -- info(addstring)
-            -- local _, _, itemLink = string.find(addstring, "(item:%d+:%d+:%d+:%d+)")
-            -- addstring = "|cffffffff|Hitem:13356:0:0:0|h[Somatic Intensifier]|h|r"
-            local _, _, itemLink = string.find(addstring, "(|c%x+|Hitem:%d+:%d+:%d+:%d+|h%[.-%]|h|r)")
+            -- info(cmdstring)
+            -- local _, _, itemLink = string.find(cmdstring, "(item:%d+:%d+:%d+:%d+)")
+            -- cmdstring = "|cffffffff|Hitem:13356:0:0:0|h[Somatic Intensifier]|h|r"
+            local _, _, itemLink = string.find(cmdstring, "(|c%x+|Hitem:%d+:%d+:%d+:%d+|h%[.-%]|h|r)")
             if not itemLink then
                 info('an item link is required. use shift-click')
                 return
@@ -51,6 +52,16 @@ do
             end
             reagentsWanted[itemLink] = amount
             info('added ' .. itemLink .. ' ' .. amount)
+        elseif commandlist[1] == 'del' then
+            local cmdstring = table.concat(commandlist, " ", 2, table.getn(commandlist))
+
+            local _, _, itemLink = string.find(cmdstring, "(|c%x+|Hitem:%d+:%d+:%d+:%d+|h%[.-%]|h|r)")
+            if not itemLink then
+                info('an item link is required. use shift-click')
+                return
+            end
+
+            reagentsWanted[itemLink] = nil
         elseif commandlist[1] == 'reset' then
             reagentsWanted = {}
             info('removed all items')

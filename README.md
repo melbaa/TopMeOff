@@ -9,6 +9,7 @@ This addon works by checking your bags for stacks of consumables that are not to
 ```
 /tmo add <itemlink> <amount> - how much of the item you want to carry. You get an item link via shift-click.
 /tmo ls - see the buy list
+/tmo del <itemlink> - remove 1 item from the list. You get an item link via shift-click.
 /tmo reset - reset the buy list
 ```
 

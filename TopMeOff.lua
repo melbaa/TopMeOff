@@ -11,6 +11,12 @@ local function print_usage()
     info('tmo reset - delete all items from the list')
 end
 
+local function compare_item_names(linka, linkb)
+    local _, _, itemida = string.find(linka, "(item:%d+:%d+:%d+:%d+)")
+    local _, _, itemidb = string.find(linkb, "(item:%d+:%d+:%d+:%d+)")
+    return GetItemInfo(itemida) < GetItemInfo(itemidb)
+end
+
 reagentsWanted = reagentsWanted or {}
 
 local gfind = string.gmatch or string.gfind
@@ -66,9 +72,18 @@ do
             reagentsWanted = {}
             info('removed all items')
         elseif commandlist[1] == 'ls' then
-            local count = 0
+
             local reagentsOwned = CountReagents(reagentsWanted)
-            for k, v in pairs(reagentsWanted) do
+
+            local sortedKeys = {}
+            for k in pairs(reagentsWanted) do
+                table.insert(sortedKeys, k)
+            end
+            table.sort(sortedKeys, compare_item_names)
+
+            local count = 0
+            for _, k in ipairs(sortedKeys) do
+                local v = reagentsWanted[k]
                 local color = '|cff1eff00' -- green
                 if reagentsOwned[k] < v then
                     color = '|cffff5179' -- red

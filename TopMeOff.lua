@@ -127,13 +127,17 @@ local function buy_spirit_zanza()
 
     -- do we have less than needed?
     local reagentsOwned = CountReagents(reagentsWanted)
-    if reagentsOwned[quest_found] >= reagentsWanted[quest_found] then return end
+    if reagentsOwned[quest_found] >= reagentsWanted[quest_found] then
+        quest_found = nil
+        return
+    end
 
     -- do we have a honor token?
     local honor_token_itemlink = "|cff1eff00|Hitem:19858:0:0:0|h[Zandalar Honor Token]|h|r"
     local honorTokensOwned = CountReagents({[honor_token_itemlink]=1})
     if honorTokensOwned[honor_token_itemlink] < 1 then
         info('missing ' .. honor_token_itemlink .. ' for ' .. quest_found)
+        quest_found = nil
         return
     end
 
@@ -162,9 +166,12 @@ function TopMeOff_OnEvent()
         buy_spirit_zanza()
     end
     if event == "QUEST_PROGRESS" then
+        -- if quest_found then info("QUEST_PROGRESS " .. tostring(quest_found)) end
         if quest_found then CompleteQuest() end
     end
     if event == "QUEST_COMPLETE" then
+        -- if quest_found then info("QUEST_COMPLETE " .. tostring(quest_found)) end
+
         -- find the correct choice id
         for i=1, GetNumQuestChoices() do
             local link = GetQuestItemLink("choice", i)

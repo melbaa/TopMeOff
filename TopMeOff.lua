@@ -12,9 +12,9 @@ local function print_usage()
 end
 
 local function compare_item_names(linka, linkb)
-    local _, _, itemida = string.find(linka, "(item:%d+:%d+:%d+:%d+)")
-    local _, _, itemidb = string.find(linkb, "(item:%d+:%d+:%d+:%d+)")
-    return GetItemInfo(itemida) < GetItemInfo(itemidb)
+    local _, _, namea = string.find(linka, "|c%x+|Hitem:%d+:%d+:%d+:%d+|h%[(.-)%]|h|r")
+    local _, _, nameb = string.find(linkb, "|c%x+|Hitem:%d+:%d+:%d+:%d+|h%[(.-)%]|h|r")
+    return namea < nameb
 end
 
 reagentsWanted = reagentsWanted or {}

@@ -7,6 +7,8 @@ local function print_usage()
     info('usage: ')
     info('tmo add <itemlink> <amount> - shift-click an item for an item link')
     info('tmo ls - see all configured items')
+    info('tmo ls need - see the items needed off the buy list')
+    info('tmo ls have - see the items you have from the buy list')
     info('tmo del <itemlink> - remove 1 item from the list. shift-click an item for an item link.')
     info('tmo reset - delete all items from the list')
 end
@@ -15,6 +17,11 @@ local function compare_item_names(linka, linkb)
     local _, _, namea = string.find(linka, "|c%x+|Hitem:%d+:%d+:%d+:%d+|h%[(.-)%]|h|r")
     local _, _, nameb = string.find(linkb, "|c%x+|Hitem:%d+:%d+:%d+:%d+|h%[(.-)%]|h|r")
     return namea < nameb
+end
+
+local function is_table_empty(table)
+    local next = next
+    return next(table) == nil
 end
 
 reagentsWanted = reagentsWanted or {}
@@ -72,7 +79,12 @@ do
             reagentsWanted = {}
             info('removed all items')
         elseif commandlist[1] == 'ls' then
-
+            if is_table_empty(reagentsWanted) then
+                info('nothing added yet')
+                return
+            end
+            local showNeed = not (string.lower(commandlist[2] or '') == 'have')
+            local showHave = not (string.lower(commandlist[2] or '') == 'need')
             local reagentsOwned = CountReagents(reagentsWanted)
 
             local sortedKeys = {}
@@ -82,18 +94,21 @@ do
             table.sort(sortedKeys, compare_item_names)
 
             local count = 0
+            local red = '|cffff5179'
+            local green = '|cff1eff00'
             for _, k in ipairs(sortedKeys) do
                 local v = reagentsWanted[k]
-                local color = '|cff1eff00' -- green
-                if reagentsOwned[k] < v then
-                    color = '|cffff5179' -- red
+                local need = reagentsOwned[k] < v
+                if need and showNeed then
+                    info(k .. ' ' .. v .. ' have ' .. red .. reagentsOwned[k])
+                    count = count + 1
+                elseif not need and showHave then
+                    info(k .. ' ' .. v .. ' have ' .. green .. reagentsOwned[k])
+                    count = count + 1
                 end
-                info(k .. ' ' .. v .. ' have ' .. color .. reagentsOwned[k])
-                count = count + 1
             end
-            if not count then
-                info('nothing added yet')
-                return
+            if count == 0 then
+                info('You do not ' .. (showNeed and 'need anything from' or 'have anything on') .. ' your list!')
             end
         else
             print_usage()

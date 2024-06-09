@@ -234,9 +234,10 @@ function TopMeOff_OnEvent()
         -- if quest_found then info("QUEST_PROGRESS " .. tostring(quest_found)) end
         if quest_found then CompleteQuest() end
     end
-    if event == 'QUEST_DETAIL' then
-        if quest_found then AcceptQuest() end
-    end
+    -- which quest is it?
+    --if event == 'QUEST_DETAIL' then
+    --    if quest_found then AcceptQuest() end
+    --end
     if event == "QUEST_COMPLETE" then
         -- if quest_found then info("QUEST_COMPLETE " .. tostring(quest_found)) end
 

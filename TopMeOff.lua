@@ -160,11 +160,57 @@ local function buy_spirit_zanza()
     SelectGossipActiveQuest(qidx)
 end
 
+local function find_qidx(questname, qlist)
+    local qidx = -1
+    local iteration = 1
+    for i=1, table.getn(qlist), 2 do
+        if qlist[i] == questname then
+            qidx = iteration
+            info(qlist[i] .. ' ' .. iteration)
+        end
+        iteration = iteration + 1
+    end
+    return qidx
+end
+
+local function buy_quest_item(itemname, questname, reagents_itemlinks)
+    quest_found = nil
+    for k, v in pairs(reagentsWanted) do
+        if string.find(k, itemname) then
+            quest_found = k
+        end
+    end
+    if not quest_found then return end
+
+    local qidx_active = find_qidx(questname, {GetGossipActiveQuests()})
+    local qidx_avail = find_qidx(questname, {GetGossipAvailableQuests()})
+    if qidx_active == -1 and qidx_avail == -1 then return end
+
+    local reagentsOwned = CountReagents(reagentsWanted)
+    if reagentsOwned[quest_found] >= reagentsWanted[quest_found] then
+        quest_found = nil
+        return
+    end
+
+    local reagentsOwned = CountReagents(reagents_itemlinks)
+    for reagent_itemlink, reagent_needed in pairs(reagents_itemlinks) do
+        if reagentsOwned[reagent_itemlink] < reagent_needed then
+            info('missing ' .. reagent_itemlink .. ' for ' .. quest_found)
+            quest_found = nil
+            return
+        end
+    end
+
+    if qidx_active ~= -1 then SelectGossipActiveQuest(qidx_active) end
+    if qidx_avail ~= -1 then SelectGossipAvailableQuest(qidx_avail) end
+end
+
 function TopMeOff_OnLoad()
     this:RegisterEvent("MERCHANT_SHOW");
 
     this:RegisterEvent("QUEST_GREETING");
     this:RegisterEvent("QUEST_PROGRESS");
+    this:RegisterEvent("QUEST_DETAIL");
     this:RegisterEvent("QUEST_COMPLETE");
     this:RegisterEvent("GOSSIP_SHOW");
 end
@@ -173,28 +219,43 @@ function TopMeOff_OnEvent()
     if( event == "MERCHANT_SHOW" ) then
         BuyReagents();
     end
-    
 
     if event == "QUEST_GREETING" then
     end
     if event == "GOSSIP_SHOW" then
         buy_spirit_zanza()
+        buy_quest_item('R.O.I.D.S.', 'Rage of Ages', {
+        ["|cffffffff|Hitem:8391:0:0:0|h[Snickerfang Jowl]|h|r"]=3,
+        ["|cffffffff|Hitem:8392:0:0:0|h[Blasted Boar Lung]|h|r"]=2,
+        ["|cffffffff|Hitem:8393:0:0:0|h[Scorpok Pincer]|h|r"]=1,
+    })
     end
     if event == "QUEST_PROGRESS" then
         -- if quest_found then info("QUEST_PROGRESS " .. tostring(quest_found)) end
         if quest_found then CompleteQuest() end
     end
+    if event == 'QUEST_DETAIL' then
+        if quest_found then AcceptQuest() end
+    end
     if event == "QUEST_COMPLETE" then
         -- if quest_found then info("QUEST_COMPLETE " .. tostring(quest_found)) end
 
         -- find the correct choice id
-        for i=1, GetNumQuestChoices() do
+        local num_choices = GetNumQuestChoices()
+        for i=1, num_choices do
             local link = GetQuestItemLink("choice", i)
             if link == quest_found then
-                info('found ' .. link)
+                info('found ' .. quest_found)
                 CompleteQuest()
                 GetQuestReward(i)
             end
+        end
+
+        -- no choice
+        if num_choices and num_choices == 0 and quest_found then
+            info('found ' .. quest_found)
+            CompleteQuest()
+            GetQuestReward(1)
         end
     end
 end

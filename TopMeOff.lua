@@ -241,6 +241,9 @@ function TopMeOff_OnEvent()
     if event == "QUEST_COMPLETE" then
         -- if quest_found then info("QUEST_COMPLETE " .. tostring(quest_found)) end
 
+        -- no quest, nothing to do
+        if quest_found == nil then return end
+
         -- find the correct choice id
         local num_choices = GetNumQuestChoices()
         for i=1, num_choices do
@@ -253,7 +256,7 @@ function TopMeOff_OnEvent()
         end
 
         -- no choice
-        if num_choices and num_choices == 0 and quest_found then
+        if num_choices and num_choices == 0 then
             info('found ' .. quest_found)
             CompleteQuest()
             GetQuestReward(1)

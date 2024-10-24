@@ -1,3 +1,5 @@
+local verbose = true
+
 local function info(msg)
     local colored = "|cffffff00<TopMeOff> " .. msg .. "|r"
     DEFAULT_CHAT_FRAME:AddMessage(colored);
@@ -178,13 +180,18 @@ local function buy_quest_item(itemname, questname, reagents_itemlinks)
     for k, v in pairs(reagentsWanted) do
         if string.find(k, itemname) then
             quest_found = k
+            if verbose then info('buy_quest_item needs ' .. quest_found) end
         end
     end
     if not quest_found then return end
 
     local qidx_active = find_qidx(questname, {GetGossipActiveQuests()})
     local qidx_avail = find_qidx(questname, {GetGossipAvailableQuests()})
-    if qidx_active == -1 and qidx_avail == -1 then return end
+    if qidx_active == -1 and qidx_avail == -1 then
+        if verbose then info('buy_quest_item did not find ' .. quest_found .. ' in active or available quests in the NPC') end
+        quest_found = nil
+        return
+    end
 
     local reagentsOwned = CountReagents(reagentsWanted)
     if reagentsOwned[quest_found] >= reagentsWanted[quest_found] then
@@ -231,35 +238,39 @@ function TopMeOff_OnEvent()
     })
     end
     if event == "QUEST_PROGRESS" then
-        -- if quest_found then info("QUEST_PROGRESS " .. tostring(quest_found)) end
-        if quest_found then CompleteQuest() end
+        if quest_found then
+            if verbose then info("QUEST_PROGRESS " .. tostring(quest_found)) end
+            CompleteQuest()
+        end
     end
     -- which quest is it?
     --if event == 'QUEST_DETAIL' then
     --    if quest_found then AcceptQuest() end
     --end
     if event == "QUEST_COMPLETE" then
-        -- if quest_found then info("QUEST_COMPLETE " .. tostring(quest_found)) end
-
         -- no quest, nothing to do
         if quest_found == nil then return end
+
+        if verbose and quest_found then info("QUEST_COMPLETE searching for " .. tostring(quest_found)) end
 
         -- find the correct choice id
         local num_choices = GetNumQuestChoices()
         for i=1, num_choices do
             local link = GetQuestItemLink("choice", i)
             if link == quest_found then
-                info('found ' .. quest_found)
-                CompleteQuest()
+                info('QUEST_COMPLETE getting reward ' .. quest_found)
+                --CompleteQuest()
                 GetQuestReward(i)
+                quest_found = nil
             end
         end
 
         -- no choice
         if num_choices and num_choices == 0 then
-            info('found ' .. quest_found)
-            CompleteQuest()
+            info('QUEST_COMPLETE getting reward ' .. quest_found)
+            --CompleteQuest()
             GetQuestReward(1)
+            quest_found = nil
         end
     end
 end

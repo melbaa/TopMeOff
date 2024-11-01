@@ -1,4 +1,4 @@
-local verbose = true
+local verbose = nil
 
 local function info(msg)
     local colored = "|cffffff00<TopMeOff> " .. msg .. "|r"
@@ -120,14 +120,14 @@ end
 
 local quest_found = nil -- will contain the itemlink to get
 local function buy_spirit_zanza()
+    local quest_found_candidate = nil
     -- is spirit zanza in our buy list?
-    quest_found = nil
     for k, v in pairs(reagentsWanted) do
         if string.find(k, 'Spirit of Zanza') then
-            quest_found = k
+            quest_found_candidate = k
         end
     end
-    if not quest_found then return end
+    if not quest_found_candidate then return end
 
     -- is the quest available at the npc?
     local qidx = -1
@@ -144,8 +144,7 @@ local function buy_spirit_zanza()
 
     -- do we have less than needed?
     local reagentsOwned = CountReagents(reagentsWanted)
-    if reagentsOwned[quest_found] >= reagentsWanted[quest_found] then
-        quest_found = nil
+    if reagentsOwned[quest_found_candidate] >= reagentsWanted[quest_found_candidate] then
         return
     end
 
@@ -153,10 +152,11 @@ local function buy_spirit_zanza()
     local honor_token_itemlink = "|cff1eff00|Hitem:19858:0:0:0|h[Zandalar Honor Token]|h|r"
     local honorTokensOwned = CountReagents({[honor_token_itemlink]=1})
     if honorTokensOwned[honor_token_itemlink] < 1 then
-        info('missing ' .. honor_token_itemlink .. ' for ' .. quest_found)
-        quest_found = nil
+        info('missing ' .. honor_token_itemlink .. ' for ' .. quest_found_candidate)
         return
     end
+
+    quest_found = quest_found_candidate
 
     -- ready to activate the quest
     SelectGossipActiveQuest(qidx)
@@ -166,6 +166,7 @@ local function find_qidx(questname, qlist)
     local qidx = -1
     local iteration = 1
     for i=1, table.getn(qlist), 2 do
+        info(qlist[i])
         if qlist[i] == questname then
             qidx = iteration
             info(qlist[i] .. ' ' .. iteration)
@@ -176,37 +177,36 @@ local function find_qidx(questname, qlist)
 end
 
 local function buy_quest_item(itemname, questname, reagents_itemlinks)
-    quest_found = nil
+    local quest_found_candidate
     for k, v in pairs(reagentsWanted) do
         if string.find(k, itemname) then
-            quest_found = k
-            if verbose then info('buy_quest_item needs ' .. quest_found) end
+            quest_found_candidate = k
+            if verbose then info('buy_quest_item needs ' .. quest_found_candidate) end
         end
     end
-    if not quest_found then return end
+    if not quest_found_candidate then return end
 
     local qidx_active = find_qidx(questname, {GetGossipActiveQuests()})
     local qidx_avail = find_qidx(questname, {GetGossipAvailableQuests()})
     if qidx_active == -1 and qidx_avail == -1 then
-        if verbose then info('buy_quest_item did not find ' .. quest_found .. ' in active or available quests in the NPC') end
-        quest_found = nil
+        if verbose then info('buy_quest_item did not find ' .. quest_found_candidate .. ' in active or available quests in the NPC') end
         return
     end
 
     local reagentsOwned = CountReagents(reagentsWanted)
-    if reagentsOwned[quest_found] >= reagentsWanted[quest_found] then
-        quest_found = nil
+    if reagentsOwned[quest_found_candidate] >= reagentsWanted[quest_found_candidate] then
         return
     end
 
     local reagentsOwned = CountReagents(reagents_itemlinks)
     for reagent_itemlink, reagent_needed in pairs(reagents_itemlinks) do
         if reagentsOwned[reagent_itemlink] < reagent_needed then
-            info('missing ' .. reagent_itemlink .. ' for ' .. quest_found)
-            quest_found = nil
+            info('missing ' .. reagent_itemlink .. ' for ' .. quest_found_candidate)
             return
         end
     end
+
+    quest_found = quest_found_candidate
 
     if qidx_active ~= -1 then SelectGossipActiveQuest(qidx_active) end
     if qidx_avail ~= -1 then SelectGossipAvailableQuest(qidx_avail) end
@@ -223,6 +223,7 @@ function TopMeOff_OnLoad()
 end
 
 function TopMeOff_OnEvent()
+    if verbose then info('saw event ' .. event) end
     if( event == "MERCHANT_SHOW" ) then
         BuyReagents();
     end
@@ -230,12 +231,21 @@ function TopMeOff_OnEvent()
     if event == "QUEST_GREETING" then
     end
     if event == "GOSSIP_SHOW" then
+        quest_found = nil
         buy_spirit_zanza()
+        buy_quest_item("Zandalar Honor Token", "Gurubashi, Vilebranch, and Witherbark Coins", {
+            ["|cff1eff00|Hitem:19701:0:0:0|h[Gurubashi Coin]|h|r"]=1,
+            ["|cff1eff00|Hitem:19702:0:0:0|h[Vilebranch Coin]|h|r"]=1,
+            ["|cff1eff00|Hitem:19703:0:0:0|h[Witherbark Coin]|h|r"]=1,
+        })
         buy_quest_item('R.O.I.D.S.', 'Rage of Ages', {
-        ["|cffffffff|Hitem:8391:0:0:0|h[Snickerfang Jowl]|h|r"]=3,
-        ["|cffffffff|Hitem:8392:0:0:0|h[Blasted Boar Lung]|h|r"]=2,
-        ["|cffffffff|Hitem:8393:0:0:0|h[Scorpok Pincer]|h|r"]=1,
-    })
+            ["|cffffffff|Hitem:8391:0:0:0|h[Snickerfang Jowl]|h|r"]=3,
+            ["|cffffffff|Hitem:8392:0:0:0|h[Blasted Boar Lung]|h|r"]=2,
+            ["|cffffffff|Hitem:8393:0:0:0|h[Scorpok Pincer]|h|r"]=1,
+        })
+        buy_quest_item('Juju Flurry', "Frostsaber E'ko", {
+            ["|cffffffff|Hitem:12430:0:0:0|h[Frostsaber E'ko]|h|r"]=3,
+        })
     end
     if event == "QUEST_PROGRESS" then
         if quest_found then

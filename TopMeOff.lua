@@ -164,6 +164,12 @@ end
 
 local function find_qidx(questname, qlist)
     local qidx = -1
+
+    if table.getn(qlist) == 0 then
+        if verbose then info('no quests found') end
+        return qidx
+    end
+
     local iteration = 1
     for i=1, table.getn(qlist), 2 do
         info(qlist[i])
@@ -174,6 +180,20 @@ local function find_qidx(questname, qlist)
         iteration = iteration + 1
     end
     return qidx
+end
+
+local function get_quests()
+    active_qs = {}
+    avail_qs = {}
+    for i=1, GetNumActiveQuests() do
+        table.insert(active_qs, GetActiveTitle(i))
+        table.insert(active_qs, GetActiveLevel(i))
+    end
+    for i=1, GetNumAvailableQuests() do
+        table.insert(avail_qs, GetAvailableTitle(i))
+        table.insert(avail_qs, GetAvailableLevel(i))
+    end
+    return active_qs, avail_qs
 end
 
 local function buy_quest_item(itemname, questname, reagents_itemlinks)
@@ -245,6 +265,9 @@ function TopMeOff_OnEvent()
         })
         buy_quest_item('Juju Flurry', "Frostsaber E'ko", {
             ["|cffffffff|Hitem:12430:0:0:0|h[Frostsaber E'ko]|h|r"]=3,
+        })
+        buy_quest_item('Juju Power', "Winterfall E'ko", {
+            ["|cffffffff|Hitem:12431:0:0:0|h[Winterfall E'ko]|h|r"]=3,
         })
     end
     if event == "QUEST_PROGRESS" then

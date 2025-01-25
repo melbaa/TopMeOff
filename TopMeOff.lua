@@ -165,8 +165,8 @@ end
 local function find_qidx(questname, qlist)
     local qidx = -1
 
-    if table.getn(qlist) == 0 then
-        if verbose then info('no quests found') end
+    if verobse and table.getn(qlist) == 0 then
+        if verbose then info('no quests found, searching for ' .. questname) end
         return qidx
     end
 
@@ -183,8 +183,8 @@ local function find_qidx(questname, qlist)
 end
 
 local function get_quests()
-    active_qs = {}
-    avail_qs = {}
+    local active_qs = {}
+    local avail_qs = {}
     for i=1, GetNumActiveQuests() do
         table.insert(active_qs, GetActiveTitle(i))
         table.insert(active_qs, GetActiveLevel(i))
@@ -208,7 +208,11 @@ local function buy_quest_item(itemname, questname, reagents_itemlinks)
 
     local qidx_active = find_qidx(questname, {GetGossipActiveQuests()})
     local qidx_avail = find_qidx(questname, {GetGossipAvailableQuests()})
-    if qidx_active == -1 and qidx_avail == -1 then
+
+    local active_qs, avail_qs = get_quests()
+    local qidx_active_nogossip = find_qidx(questname, active_qs)
+    local qidx_avail_nogossip = find_qidx(questname, avail_qs)
+    if qidx_active == -1 and qidx_avail == -1 and qidx_active_nogossip == -1 and qidx_avail_nogossip == -1 then
         if verbose then info('buy_quest_item did not find ' .. quest_found_candidate .. ' in active or available quests in the NPC') end
         return
     end
@@ -230,6 +234,8 @@ local function buy_quest_item(itemname, questname, reagents_itemlinks)
 
     if qidx_active ~= -1 then SelectGossipActiveQuest(qidx_active) end
     if qidx_avail ~= -1 then SelectGossipAvailableQuest(qidx_avail) end
+    if qidx_active_nogossip ~= -1 then SelectActiveQuest(qidx_active_nogossip) end
+    if qidx_avail_nogossip ~= -1 then SelectAvailableQuest(qidx_avail_nogossip) end
 end
 
 function TopMeOff_OnLoad()
@@ -244,11 +250,14 @@ end
 
 function TopMeOff_OnEvent()
     if verbose then info('saw event ' .. event) end
-    if( event == "MERCHANT_SHOW" ) then
+    if event == "MERCHANT_SHOW" then
         BuyReagents();
     end
 
     if event == "QUEST_GREETING" then
+        buy_quest_item("Consecrated Sharpening Stone", "Corruptor's Scourgestones", {
+            ["|cff1eff00|Hitem:12843:0:0:0|h[Corruptor's Scourgestone]|h|r"]=1,
+        })
     end
     if event == "GOSSIP_SHOW" then
         quest_found = nil
